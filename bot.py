@@ -11,12 +11,19 @@ TOKEN = os.getenv("BOT_TOKEN")
 
 
 async def send_second_message(bot, chat_id):
+    logging.info("SECOND TASK STARTED")
+
     await asyncio.sleep(10)
 
-    await bot.send_message(
-        chat_id=chat_id,
-        text="🙏 Если вам сейчас нужна помощь или совет — можете написать прямо в группу."
-    )
+    try:
+        await bot.send_message(
+            chat_id=chat_id,
+            text="🙏 Если вам сейчас нужна помощь или совет — можете написать прямо в группу."
+        )
+        logging.info("SECOND MESSAGE SENT")
+
+    except Exception as e:
+        logging.error(f"SECOND MESSAGE ERROR: {e}")
 
 
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -37,6 +44,8 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.application.create_task(
             send_second_message(context.bot, chat_id)
         )
+
+        logging.info("SECOND TASK CREATED")
 
 
 app = ApplicationBuilder().token(TOKEN).build()
