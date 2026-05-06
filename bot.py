@@ -31,7 +31,7 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         # Ждём 2 минуты
-        await asyncio.sleep(120)
+        await asyncio.sleep(10)
 
         # Второе сообщение
         await context.bot.send_message(
