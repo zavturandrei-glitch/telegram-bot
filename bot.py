@@ -40,21 +40,28 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def startup_test():
+async def startup_autopost(application):
     await asyncio.sleep(20)
 
-    await app.bot.send_message(
+    await application.bot.send_message(
         chat_id=CHAT_ID,
         text="✅ Автопост работает. Бот сам написал сообщение в группу."
     )
 
 
-app = ApplicationBuilder().token(TOKEN).build()
+async def on_startup(application):
+    application.create_task(startup_autopost(application))
+
+
+app = (
+    ApplicationBuilder()
+    .token(TOKEN)
+    .post_init(on_startup)
+    .build()
+)
 
 app.add_handler(
     MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
 )
-
-app.create_task(startup_test())
 
 app.run_polling()
