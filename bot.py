@@ -1,6 +1,8 @@
 import os
 import asyncio
 import logging
+import requests
+
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -10,7 +12,10 @@ from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filte
 logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("BOT_TOKEN")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+
 CHAT_ID = -1003817168180
+
 TIMEZONE = ZoneInfo("Europe/Chisinau")
 
 
@@ -43,32 +48,57 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+def get_weather():
+    url = (
+        f"https://api.openweathermap.org/data/2.5/weather"
+        f"?q=Chisinau&appid={WEATHER_API_KEY}&units=metric&lang=ru"
+    )
+
+    response = requests.get(url)
+    data = response.json()
+
+    temp = round(data["main"]["temp"])
+    description = data["weather"][0]["description"]
+
+    return (
+        f"🌦 Доброе утро, Кишинёв!\n\n"
+        f"Сейчас: {temp}°C\n"
+        f"Погода: {description}\n\n"
+        f"Хорошего дня 🙌"
+    )
+
+
 async def morning_post_loop(application):
     while True:
         now = datetime.now(TIMEZONE)
-        target = datetime.combine(now.date(), time(8, 30), tzinfo=TIMEZONE)
+
+        target = datetime.combine(
+            now.date(),
+            time(8, 30),
+            tzinfo=TIMEZONE
+        )
 
         if now >= target:
-            target = target + timedelta(days=1)
+            target += timedelta(days=1)
 
         seconds_until_post = (target - now).total_seconds()
 
-        logging.info(f"Next morning post in {seconds_until_post} seconds")
+        logging.info(f"Next weather post in {seconds_until_post} seconds")
 
         await asyncio.sleep(seconds_until_post)
 
+        weather_text = get_weather()
+
         await application.bot.send_message(
             chat_id=CHAT_ID,
-            text=(
-                "☀️ Доброе утро!\n\n"
-                "Кто сегодня ищет жильё, работу или помощь с документами — "
-                "пишите в группу. Возможно, кто-то уже сталкивался с таким вопросом и подскажет."
-            )
+            text=weather_text
         )
 
 
 async def on_startup(application):
-    application.create_task(morning_post_loop(application))
+    application.create_task(
+        morning_post_loop(application)
+    )
 
 
 app = (
