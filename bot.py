@@ -84,7 +84,7 @@ job_queue = app.job_queue
 
 job_queue.run_daily(
     morning_weather,
-    time=time(20, 13)
+    time=time(20, 28)
 )
 
 app.run_polling()
