@@ -89,7 +89,7 @@ app.add_handler(
 
 app.job_queue.run_daily(
     morning_weather,
-    time=time(hour=8, minute=0, tzinfo=TIMEZONE)
+    time=time(hour=20, minute=45, tzinfo=TIMEZONE)
 )
 
 app.run_polling()
