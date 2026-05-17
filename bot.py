@@ -8,7 +8,6 @@ from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filte
 logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("BOT_TOKEN")
-
 CHAT_ID = -1003817168180
 
 
@@ -41,25 +40,21 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def test_autopost(bot):
-    await asyncio.sleep(60)
+async def startup_test():
+    await asyncio.sleep(20)
 
-    await bot.send_message(
+    await app.bot.send_message(
         chat_id=CHAT_ID,
-        text="✅ Тест автопостинга работает. Бот сам написал сообщение в группу."
+        text="✅ Автопост работает. Бот сам написал сообщение в группу."
     )
 
 
-async def post_init(application):
-    application.create_task(
-        test_autopost(application.bot)
-    )
-
-
-app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
+app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(
     MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
 )
+
+app.create_task(startup_test())
 
 app.run_polling()
