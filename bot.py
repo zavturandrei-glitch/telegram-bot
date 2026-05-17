@@ -9,20 +9,16 @@ logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("BOT_TOKEN")
 
+CHAT_ID = -1003817168180
+
 
 async def send_second_message(bot, chat_id):
-    logging.info("SECOND TASK STARTED")
-
     await asyncio.sleep(10)
 
-    try:
-        await bot.send_message(
-            chat_id=chat_id,
-            text="🙏 Если вам сейчас нужна помощь или совет — можете написать прямо в группу."
-        )
-        logging.info("SECOND MESSAGE SENT")
-    except Exception as e:
-        logging.error(f"SECOND MESSAGE ERROR: {e}")
+    await bot.send_message(
+        chat_id=chat_id,
+        text="🙏 Если вам сейчас нужна помощь или совет — можете написать прямо в группу."
+    )
 
 
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -44,21 +40,26 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
             send_second_message(context.bot, chat_id)
         )
 
-        logging.info("SECOND TASK CREATED")
+
+async def test_autopost(bot):
+    await asyncio.sleep(60)
+
+    await bot.send_message(
+        chat_id=CHAT_ID,
+        text="✅ Тест автопостинга работает. Бот сам написал сообщение в группу."
+    )
 
 
-async def show_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print(update.effective_chat.id)
+async def post_init(application):
+    application.create_task(
+        test_autopost(application.bot)
+    )
 
 
-app = ApplicationBuilder().token(TOKEN).build()
+app = ApplicationBuilder().token(TOKEN).post_init(post_init).build()
 
 app.add_handler(
     MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
-)
-
-app.add_handler(
-    MessageHandler(filters.TEXT, show_chat_id)
 )
 
 app.run_polling()
