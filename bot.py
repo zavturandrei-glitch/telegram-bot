@@ -1,6 +1,8 @@
 import os
 import asyncio
 import logging
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
@@ -9,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = -1003817168180
+TIMEZONE = ZoneInfo("Europe/Chisinau")
 
 
 async def send_second_message(bot, chat_id):
@@ -40,17 +43,32 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-async def startup_autopost(application):
-    await asyncio.sleep(20)
+async def morning_post_loop(application):
+    while True:
+        now = datetime.now(TIMEZONE)
+        target = datetime.combine(now.date(), time(8, 30), tzinfo=TIMEZONE)
 
-    await application.bot.send_message(
-        chat_id=CHAT_ID,
-        text="✅ Автопост работает. Бот сам написал сообщение в группу."
-    )
+        if now >= target:
+            target = target + timedelta(days=1)
+
+        seconds_until_post = (target - now).total_seconds()
+
+        logging.info(f"Next morning post in {seconds_until_post} seconds")
+
+        await asyncio.sleep(seconds_until_post)
+
+        await application.bot.send_message(
+            chat_id=CHAT_ID,
+            text=(
+                "☀️ Доброе утро!\n\n"
+                "Кто сегодня ищет жильё, работу или помощь с документами — "
+                "пишите в группу. Возможно, кто-то уже сталкивался с таким вопросом и подскажет."
+            )
+        )
 
 
 async def on_startup(application):
-    application.create_task(startup_autopost(application))
+    application.create_task(morning_post_loop(application))
 
 
 app = (
