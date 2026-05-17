@@ -3,8 +3,6 @@ import requests
 import asyncio
 import logging
 
-from datetime import time
-
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -21,8 +19,7 @@ WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 CHAT_ID = -1003817168180
 
 
-async def morning_weather(context: ContextTypes.DEFAULT_TYPE):
-
+async def send_weather(bot):
     url = (
         f"https://api.openweathermap.org/data/2.5/weather"
         f"?q=Chisinau&appid={WEATHER_API_KEY}&units=metric&lang=ru"
@@ -34,57 +31,36 @@ async def morning_weather(context: ContextTypes.DEFAULT_TYPE):
     temp = data["main"]["temp"]
     description = data["weather"][0]["description"]
 
-    message = (
-        f"🌤 Доброе утро!\n\n"
-        f"Сейчас в Кишинёве:\n"
+    text = (
+        f"🌤 Погода в Кишинёве\n\n"
         f"🌡 Температура: {temp}°C\n"
-        f"☁️ Погода: {description}"
+        f"☁️ Сейчас: {description}"
     )
 
-    await context.bot.send_message(
-        chat_id=CHAT_ID,
-        text=message
-    )
+    await bot.send_message(chat_id=CHAT_ID, text=text)
+
+
+async def startup_test(app):
+    await asyncio.sleep(20)
+    await send_weather(app.bot)
 
 
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     for user in update.message.new_chat_members:
-
         name = user.full_name
 
         await update.message.reply_text(
             f"👋 Добро пожаловать, {name}!\n\n"
-            f"Рады видеть вас в группе 🙌\n"
-            f"Здесь можно спокойно задавать вопросы по Кишинёву:\n"
-            f"🏠 жильё\n"
-            f"💼 работа\n"
-            f"📄 документы\n"
-            f"🚌 транспорт"
-        )
-
-        await asyncio.sleep(10)
-
-        await update.message.reply_text(
-            "🙏 Если вам сейчас нужна помощь или совет — "
-            "можете написать прямо в группу."
+            "Рады видеть вас в группе 🙌"
         )
 
 
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(
-    MessageHandler(
-        filters.StatusUpdate.NEW_CHAT_MEMBERS,
-        welcome
-    )
+    MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
 )
 
-job_queue = app.job_queue
-
-job_queue.run_daily(
-    morning_weather,
-    time=time(20, 28)
-)
+app.post_init = startup_test
 
 app.run_polling()
