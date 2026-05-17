@@ -74,7 +74,7 @@ async def morning_post_loop(application):
 
         target = datetime.combine(
             now.date(),
-            time(8, 30),
+            time(19, 54),
             tzinfo=TIMEZONE
         )
 
