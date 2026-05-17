@@ -21,7 +21,6 @@ async def send_second_message(bot, chat_id):
             text="🙏 Если вам сейчас нужна помощь или совет — можете написать прямо в группу."
         )
         logging.info("SECOND MESSAGE SENT")
-
     except Exception as e:
         logging.error(f"SECOND MESSAGE ERROR: {e}")
 
@@ -48,10 +47,18 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.info("SECOND TASK CREATED")
 
 
+async def show_chat_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(update.effective_chat.id)
+
+
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(
     MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
+)
+
+app.add_handler(
+    MessageHandler(filters.TEXT, show_chat_id)
 )
 
 app.run_polling()
