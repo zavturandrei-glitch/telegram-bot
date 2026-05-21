@@ -91,12 +91,12 @@ app.add_handler(
 
 app.job_queue.run_daily(
     morning_weather,
-    time=time(hour=13, minute=01, tzinfo=TIMEZONE)
+    time=time(hour=13, minute=5, tzinfo=TIMEZONE)
 )
 
 app.job_queue.run_daily(
     morning_traffic,
-    time=time(hour=13, minute=00, tzinfo=TIMEZONE)
+    time=time(hour=13, minute=6, tzinfo=TIMEZONE)
 )
 
 app.run_polling()
