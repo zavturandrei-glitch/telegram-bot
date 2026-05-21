@@ -45,25 +45,22 @@ def get_weather_text():
 
 
 def get_traffic_text():
-    lat = 47.0228
-    lon = 28.8353
-
     url = (
         "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json"
-        f"?point={lat},{lon}&key={TOMTOM_API_KEY}"
+        f"?point=47.0245,28.8323&key={TOMTOM_API_KEY}"
     )
 
     response = requests.get(url, timeout=10)
-    data = response.json()
 
     print("TOMTOM STATUS:", response.status_code)
-    print("TOMTOM DATA:", data)
+    print("TOMTOM TEXT:", response.text)
+
+    data = response.json()
 
     if "flowSegmentData" not in data:
         return (
             "🚗 Пробки в Кишинёве\n\n"
-            "Сейчас не получилось получить данные TomTom.\n"
-            "Проверяем настройку API 🙏"
+            "TomTom пока не вернул данные 🙏"
         )
 
     flow = data["flowSegmentData"]
@@ -80,10 +77,10 @@ def get_traffic_text():
 
     return (
         "🚗 Пробки в Кишинёве\n\n"
-        f"Центр города: {status}\n"
-        f"Скорость сейчас: {current_speed} км/ч\n"
-        f"Обычно без пробок: {free_flow_speed} км/ч\n\n"
-        "Берегите время и планируйте маршрут заранее 🙌"
+        f"Ситуация: {status}\n"
+        f"Текущая скорость: {current_speed} км/ч\n"
+        f"Свободная дорога: {free_flow_speed} км/ч\n\n"
+        "Планируйте маршрут заранее 🙌"
     )
 
 
