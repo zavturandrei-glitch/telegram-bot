@@ -37,10 +37,9 @@ def get_weather_text():
     description = data["weather"][0]["description"]
 
     return (
-        "🌤 Доброе утро, Кишинёв!\n\n"
+        "🌤 Погода в Кишинёве\n\n"
         f"🌡 Температура: {temp}°C\n"
-        f"☁️ Сейчас: {description}\n\n"
-        "Хорошего дня 🙌"
+        f"☁️ Сейчас: {description}"
     )
 
 
@@ -163,21 +162,19 @@ def get_traffic_text():
     )
 
 
-async def morning_weather(context: ContextTypes.DEFAULT_TYPE):
+async def weather_and_traffic_post(context: ContextTypes.DEFAULT_TYPE):
     weather_text = get_weather_text()
-
-    await context.bot.send_message(
-        chat_id=CHAT_ID,
-        text=weather_text
-    )
-
-
-async def morning_traffic(context: ContextTypes.DEFAULT_TYPE):
     traffic_text = get_traffic_text()
 
+    full_text = (
+        f"{weather_text}\n\n"
+        "────────────\n\n"
+        f"{traffic_text}"
+    )
+
     await context.bot.send_message(
         chat_id=CHAT_ID,
-        text=traffic_text
+        text=full_text
     )
 
 
@@ -217,13 +214,18 @@ app.add_handler(
 )
 
 app.job_queue.run_daily(
-    morning_weather,
+    weather_and_traffic_post,
     time=time(hour=8, minute=0, tzinfo=TIMEZONE)
 )
 
-app.job_queue.run_once(
-    morning_traffic,
-    when=10
+app.job_queue.run_daily(
+    weather_and_traffic_post,
+    time=time(hour=12, minute=0, tzinfo=TIMEZONE)
+)
+
+app.job_queue.run_daily(
+    weather_and_traffic_post,
+    time=time(hour=17, minute=0, tzinfo=TIMEZONE)
 )
 
 app.run_polling()
