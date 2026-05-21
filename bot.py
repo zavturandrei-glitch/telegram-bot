@@ -10,9 +10,12 @@ from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     MessageHandler,
+    CommandHandler,
     ContextTypes,
     filters,
 )
+
+from traffic import traffic_command
 
 logging.basicConfig(level=logging.INFO)
 
@@ -85,6 +88,10 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(
     MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
+)
+
+app.add_handler(
+    CommandHandler("traffic", traffic_command)
 )
 
 app.job_queue.run_daily(
