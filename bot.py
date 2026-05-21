@@ -71,8 +71,7 @@ def get_route_duration(origin_lat, origin_lon, dest_lat, dest_lon):
             }
         },
         "travelMode": "DRIVE",
-        "routingPreference": "TRAFFIC_AWARE",
-        "departureTime": "2026-05-21T08:00:00Z",
+        "routingPreference": "TRAFFIC_AWARE_OPTIMAL",
     }
 
     response = requests.post(url, headers=headers, json=body, timeout=15)
@@ -104,17 +103,17 @@ def get_traffic_text():
     routes = [
         {
             "name": "Ботаника → Центр",
-            "origin": (46.9820, 28.8575),
+            "origin": (46.9885, 28.8572),
             "destination": (47.0245, 28.8323),
         },
         {
             "name": "Рышкановка → Центр",
-            "origin": (47.0600, 28.8680),
+            "origin": (47.0604, 28.8721),
             "destination": (47.0245, 28.8323),
         },
         {
             "name": "Буюканы → Центр",
-            "origin": (47.0385, 28.7790),
+            "origin": (47.0386, 28.7803),
             "destination": (47.0245, 28.8323),
         },
     ]
