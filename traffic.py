@@ -1,11 +1,12 @@
 import os
 import requests
 
-from telegram import Update
 from telegram.ext import ContextTypes
 
 
 TOMTOM_API_KEY = os.getenv("TOMTOM_API_KEY")
+
+CHAT_ID = -1003817168180
 
 
 def get_traffic_text():
@@ -26,21 +27,24 @@ def get_traffic_text():
     free_flow_speed = flow["freeFlowSpeed"]
 
     if current_speed < free_flow_speed * 0.5:
-        status = "🔴 сильная загруженность"
+        status = "🔴 Сильные пробки"
     elif current_speed < free_flow_speed * 0.8:
-        status = "🟠 движение замедлено"
+        status = "🟠 Движение замедлено"
     else:
-        status = "🟢 движение свободное"
+        status = "🟢 Движение свободное"
 
     return (
-        "🚗 Трафик в Кишинёве\n\n"
+        "🚗 Пробки в Кишинёве\n\n"
         f"Центр города: {status}\n"
-        f"Скорость сейчас: {current_speed} км/ч\n"
-        f"Обычно без пробок: {free_flow_speed} км/ч\n\n"
-        "Тестируем новую функцию 🙏"
+        f"Средняя скорость: {current_speed} км/ч\n\n"
+        "Берегите время и планируйте маршрут заранее 🙌"
     )
 
 
-async def traffic_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def morning_traffic(context: ContextTypes.DEFAULT_TYPE):
     text = get_traffic_text()
-    await update.message.reply_text(text)
+
+    await context.bot.send_message(
+        chat_id=CHAT_ID,
+        text=text
+    )

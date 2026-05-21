@@ -10,12 +10,11 @@ from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     MessageHandler,
-    CommandHandler,
     ContextTypes,
     filters,
 )
 
-from traffic import traffic_command
+from traffic import morning_traffic
 
 logging.basicConfig(level=logging.INFO)
 
@@ -90,13 +89,14 @@ app.add_handler(
     MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
 )
 
-app.add_handler(
-    CommandHandler("traffic", traffic_command)
-)
-
 app.job_queue.run_daily(
     morning_weather,
     time=time(hour=8, minute=0, tzinfo=TIMEZONE)
+)
+
+app.job_queue.run_daily(
+    morning_traffic,
+    time=time(hour=8, minute=30, tzinfo=TIMEZONE)
 )
 
 app.run_polling()
