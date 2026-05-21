@@ -30,7 +30,7 @@ def get_weather_text():
         f"?q=Chisinau&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     )
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     data = response.json()
 
     temp = round(data["main"]["temp"], 1)
@@ -53,8 +53,18 @@ def get_traffic_text():
         f"?point={lat},{lon}&key={TOMTOM_API_KEY}"
     )
 
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     data = response.json()
+
+    print("TOMTOM STATUS:", response.status_code)
+    print("TOMTOM DATA:", data)
+
+    if "flowSegmentData" not in data:
+        return (
+            "🚗 Пробки в Кишинёве\n\n"
+            "Сейчас не получилось получить данные TomTom.\n"
+            "Проверяем настройку API 🙏"
+        )
 
     flow = data["flowSegmentData"]
 
@@ -132,12 +142,12 @@ app.add_handler(
 
 app.job_queue.run_daily(
     morning_weather,
-    time=time(hour=13, minute=18, tzinfo=TIMEZONE)
+    time=time(hour=8, minute=0, tzinfo=TIMEZONE)
 )
 
-app.job_queue.run_daily(
+app.job_queue.run_once(
     morning_traffic,
-    time=time(hour=13, minute=17, tzinfo=TIMEZONE)
+    when=10
 )
 
 app.run_polling()
