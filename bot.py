@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 TOKEN = os.getenv("BOT_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
-TOMTOM_API_KEY = os.getenv("TOMTOM_API_KEY")
+GOOGLE_ROUTES_API_KEY = os.getenv("GOOGLE_ROUTES_API_KEY")
 
 CHAT_ID = -1003817168180
 TIMEZONE = ZoneInfo("Europe/Chisinau")
@@ -44,48 +44,123 @@ def get_weather_text():
     )
 
 
-def get_traffic_text():
-    lat = 47.0211
-    lon = 28.8406
+def get_route_duration(origin_lat, origin_lon, dest_lat, dest_lon):
+    url = "https://routes.googleapis.com/directions/v2:computeRoutes"
 
-    url = (
-        "https://api.tomtom.com/traffic/services/4/flowSegmentData/relative0/10/json"
-        f"?point={lat},{lon}&key={TOMTOM_API_KEY}"
-    )
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": GOOGLE_ROUTES_API_KEY,
+        "X-Goog-FieldMask": "routes.duration,routes.staticDuration",
+    }
 
-    response = requests.get(url, timeout=10)
+    body = {
+        "origin": {
+            "location": {
+                "latLng": {
+                    "latitude": origin_lat,
+                    "longitude": origin_lon,
+                }
+            }
+        },
+        "destination": {
+            "location": {
+                "latLng": {
+                    "latitude": dest_lat,
+                    "longitude": dest_lon,
+                }
+            }
+        },
+        "travelMode": "DRIVE",
+        "routingPreference": "TRAFFIC_AWARE",
+        "departureTime": "2026-05-21T08:00:00Z",
+    }
 
-    print("STATUS:", response.status_code)
-    print("TEXT:", response.text)
+    response = requests.post(url, headers=headers, json=body, timeout=15)
+
+    print("GOOGLE ROUTES STATUS:", response.status_code)
+    print("GOOGLE ROUTES TEXT:", response.text)
 
     data = response.json()
 
-    if "flowSegmentData" not in data:
-        return (
-            "🚗 Пробки в Кишинёве\n\n"
-            "TomTom пока не дал данные 🙏"
+    if "routes" not in data or not data["routes"]:
+        return None
+
+    route = data["routes"][0]
+
+    duration_text = route.get("duration", "0s")
+    static_duration_text = route.get("staticDuration", "0s")
+
+    duration_seconds = int(duration_text.replace("s", ""))
+    static_duration_seconds = int(static_duration_text.replace("s", ""))
+
+    return duration_seconds, static_duration_seconds
+
+
+def seconds_to_minutes(seconds):
+    return round(seconds / 60)
+
+
+def get_traffic_text():
+    routes = [
+        {
+            "name": "Ботаника → Центр",
+            "origin": (46.9820, 28.8575),
+            "destination": (47.0245, 28.8323),
+        },
+        {
+            "name": "Рышкановка → Центр",
+            "origin": (47.0600, 28.8680),
+            "destination": (47.0245, 28.8323),
+        },
+        {
+            "name": "Буюканы → Центр",
+            "origin": (47.0385, 28.7790),
+            "destination": (47.0245, 28.8323),
+        },
+    ]
+
+    lines = []
+
+    for route in routes:
+        result = get_route_duration(
+            route["origin"][0],
+            route["origin"][1],
+            route["destination"][0],
+            route["destination"][1],
         )
 
-    flow = data["flowSegmentData"]
+        if result is None:
+            lines.append(f"⚠️ {route['name']}: данных пока нет")
+            continue
 
-    current_speed = flow["currentSpeed"]
-    free_flow_speed = flow["freeFlowSpeed"]
-    confidence = flow["confidence"]
+        duration_seconds, static_duration_seconds = result
 
-    if current_speed < free_flow_speed * 0.5:
-        status = "🔴 Сильные пробки"
-    elif current_speed < free_flow_speed * 0.8:
-        status = "🟠 Движение замедлено"
-    else:
-        status = "🟢 Движение свободное"
+        delay_seconds = duration_seconds - static_duration_seconds
+
+        duration_min = seconds_to_minutes(duration_seconds)
+        delay_min = seconds_to_minutes(delay_seconds)
+
+        if delay_min >= 15:
+            status = "🔴 сильная пробка"
+        elif delay_min >= 7:
+            status = "🟠 движение замедлено"
+        else:
+            status = "🟢 нормально"
+
+        lines.append(
+            f"{status}\n"
+            f"{route['name']}: примерно {duration_min} мин"
+        )
+
+        if delay_min > 0:
+            lines.append(f"Задержка из-за трафика: +{delay_min} мин")
+
+        lines.append("")
 
     return (
         "🚗 Пробки в Кишинёве\n\n"
-        f"Ситуация: {status}\n"
-        f"Текущая скорость: {current_speed} км/ч\n"
-        f"Свободная скорость: {free_flow_speed} км/ч\n"
-        f"Точность данных: {confidence}\n\n"
-        "Планируйте маршрут заранее 🙌"
+        + "\n".join(lines)
+        + "Планируйте маршрут заранее 🙌"
     )
 
 
