@@ -45,8 +45,8 @@ def get_weather_text():
 
 
 def get_traffic_text():
-    lat = 47.0105
-    lon = 28.8638
+    lat = 47.0228
+    lon = 28.8353
 
     url = (
         "https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json"
